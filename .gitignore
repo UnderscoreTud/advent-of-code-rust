@@ -22,6 +22,7 @@ data/inputs/*
 !data/inputs/.keep
 data/puzzles/*
 !data/puzzles/.keep
+.adventofcode.session
 
 # Dhat
 dhat-heap.json
