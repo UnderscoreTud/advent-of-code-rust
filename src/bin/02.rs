@@ -1,35 +1,27 @@
+use std::cmp::Ordering::Equal;
+use itertools::Itertools;
+
 advent_of_code::solution!(2);
 
 fn is_safe(data: &Vec<u32>) -> bool {
-    let mut previous_direction = None;
-    for i in 0..(data.len() - 1) {
-        let diff = data[i].abs_diff(data[i + 1]);
-        if diff == 0 || diff > 3 {
-            return false;
-        }
-        let direction = data[i].cmp(&data[i + 1]);
-        match previous_direction {
-            Some(previous_direction) => if previous_direction != direction {
-                return false;
-            },
-            None => previous_direction = Some(direction)
-        }
+    let direction = data[0].cmp(&data[1]);
+    if direction == Equal {
+        return false;
     }
-    true
+    data.iter().tuple_windows::<(&u32, &u32)>()
+        .map(|(current, next)| (1..=3).contains(&current.abs_diff(*next)) && current.cmp(next) == direction)
+        .all(|valid| valid)
 }
 
 fn is_safe_lenient(data: &Vec<u32>) -> bool {
     if is_safe(data) {
         return true;
     }
-    for i in 0..data.len() {
+    (0..data.len()).any(|index| {
         let mut modified_data = data.clone();
-        modified_data.remove(i);
-        if is_safe(&modified_data) {
-            return true
-        }
-    }
-    false
+        modified_data.remove(index);
+        is_safe(&modified_data)
+    })
 }
 
 fn count_safe_reports<P>(input: &str, predicate: P) -> u32
