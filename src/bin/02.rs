@@ -4,7 +4,7 @@ fn is_safe(data: &Vec<u32>) -> bool {
     let mut previous_direction = None;
     for i in 0..(data.len() - 1) {
         let diff = data[i].abs_diff(data[i + 1]);
-        if diff > 3 {
+        if diff == 0 || diff > 3 {
             return false;
         }
         let direction = data[i].cmp(&data[i + 1]);
