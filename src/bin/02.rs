@@ -3,7 +3,7 @@ use itertools::Itertools;
 
 advent_of_code::solution!(2);
 
-fn is_safe(data: &Vec<u32>) -> bool {
+fn is_safe(data: &[u32]) -> bool {
     let direction = data[0].cmp(&data[1]);
     if direction == Equal {
         return false;
@@ -13,12 +13,12 @@ fn is_safe(data: &Vec<u32>) -> bool {
         .all(|valid| valid)
 }
 
-fn is_safe_lenient(data: &Vec<u32>) -> bool {
+fn is_safe_lenient(data: &[u32]) -> bool {
     if is_safe(data) {
         return true;
     }
     (0..data.len()).any(|index| {
-        let mut modified_data = data.clone();
+        let mut modified_data = data.to_vec();
         modified_data.remove(index);
         is_safe(&modified_data)
     })
@@ -37,11 +37,11 @@ where
 }
 
 pub fn part_one(input: &str) -> Option<u32> {
-    Some(count_safe_reports(input, is_safe))
+    Some(count_safe_reports(input, |data| is_safe(data)))
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
-    Some(count_safe_reports(input, is_safe_lenient))
+    Some(count_safe_reports(input, |data| is_safe_lenient(data)))
 }
 
 #[cfg(test)]
