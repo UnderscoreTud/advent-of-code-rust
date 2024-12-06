@@ -1,5 +1,6 @@
 use std::collections::HashSet;
 use itertools::Itertools;
+use pariter::{scope, IteratorExt};
 
 advent_of_code::solution!(6);
 
@@ -107,20 +108,22 @@ pub fn part_one(input: &str) -> Option<u32> {
 }
 
 pub fn part_two(input: &str) -> Option<u32> {
-    let mut obstructions = 0;
     let mut map = Map::parse(input);
     map.predict_path();
     let mut original_path = map.visited_pos;
     original_path.remove(&map.starting_pos);
-    for pos in original_path {
-        map.obstacles.insert(pos); 
-        map.visited_pos = HashSet::new();
-        if map.has_loop() {
-            obstructions += 1;
-        }
-        map.obstacles.remove(&pos);
-    }
-    Some(obstructions)
+    Some(scope(|scope| original_path.iter()
+        .parallel_filter_scoped(scope, move |pos| {
+            let mut new_obstacles = map.obstacles.clone();
+            new_obstacles.insert(**pos);
+            let mut map = Map {
+                obstacles: new_obstacles,
+                visited_pos: HashSet::new(),
+                ..map
+            };
+            map.has_loop()
+        })
+        .count() as u32).unwrap())
 }
 
 #[cfg(test)]
