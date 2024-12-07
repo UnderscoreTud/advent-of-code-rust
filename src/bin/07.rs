@@ -5,7 +5,7 @@ use rayon::prelude::ParallelString;
 advent_of_code::solution!(7);
 
 fn parse_and_solve<F>(input: &str, equation_checker: F) -> u64
-    where F: Fn(&u64, &[u64], &u64) -> bool + Sync
+    where F: Fn(&[u64], &u64) -> bool + Sync
 {
     input.par_lines()
         .map(|line| {
@@ -16,37 +16,42 @@ fn parse_and_solve<F>(input: &str, equation_checker: F) -> u64
             (terms, expected)
         })
         .filter_map(|(terms, expected)| {
-            if equation_checker(&terms[0], &terms[1..], &expected) { Some(expected) } else { None }
+            if equation_checker(&terms, &expected) { Some(expected) } else { None }
         })
         .sum()
 }
 
-fn is_valid_equation(current_term: &u64, terms: &[u64], expected: &u64) -> bool {
-    if terms.is_empty() {
-        return current_term == expected;
+fn is_valid_equation(terms: &[u64], expected: &u64) -> bool {
+    if terms.len() == 1 {
+        return &terms[0] == expected;
     }
 
-    let next_term = terms[0];
-    let new_terms = &terms[1..];
-    [current_term * next_term, current_term + next_term].iter()
-        .filter(|term| *term <= expected)
-        .any(|term| is_valid_equation(term, new_terms, expected))
+    let x = terms.last().unwrap();
+    let slice = &terms[..terms.len() - 1];
+    if expected % x == 0 && is_valid_equation(slice, &(expected / x)) {
+        true
+    } else {
+        expected >= x && is_valid_equation(slice, &(expected - x))
+    }
 }
 
-fn is_valid_equation_with_concat(current_term: &u64, terms: &[u64], expected: &u64) -> bool {
-    if terms.is_empty() {
-        return current_term == expected;
+fn is_valid_equation_with_concat(terms: &[u64], expected: &u64) -> bool {
+    if terms.len() == 1 {
+        return &terms[0] == expected;
     }
 
-    let next_term = terms[0];
-    let new_terms = &terms[1..];
-    [
-        current_term * next_term,
-        current_term + next_term,
-        (current_term.to_string() + &next_term.to_string()).parse().unwrap(),
-    ].iter()
-        .filter(|term| *term <= expected)
-        .any(|term| is_valid_equation_with_concat(term, new_terms, expected))
+    let right = terms.last().unwrap();
+    let slice = &terms[..terms.len() - 1];
+    if expected % right == 0 && is_valid_equation_with_concat(slice, &(expected / right)) {
+        true
+    } else if expected >= right && is_valid_equation_with_concat(slice, &(expected - right)) {
+        true
+    } else {
+        let n_digits = right.ilog10() + 1;
+        let y = 10u64.pow(n_digits);
+        let suffix = expected % y;
+        &suffix == right && is_valid_equation_with_concat(slice, &(expected / y))
+    }
 }
 
 pub fn part_one(input: &str) -> Option<u64> {
