@@ -1,6 +1,7 @@
+use rayon::iter::ParallelIterator;
 use std::collections::HashSet;
 use itertools::Itertools;
-use pariter::{scope, IteratorExt};
+use rayon::prelude::IntoParallelRefIterator;
 
 advent_of_code::solution!(6);
 
@@ -112,8 +113,8 @@ pub fn part_two(input: &str) -> Option<u32> {
     map.predict_path();
     let mut original_path = map.visited_pos;
     original_path.remove(&map.starting_pos);
-    Some(scope(|scope| original_path.iter()
-        .parallel_filter_scoped(scope, move |pos| {
+    Some(original_path.par_iter()
+        .filter(|pos| {
             let mut new_obstacles = map.obstacles.clone();
             new_obstacles.insert(**pos);
             let mut map = Map {
@@ -123,7 +124,7 @@ pub fn part_two(input: &str) -> Option<u32> {
             };
             map.has_loop()
         })
-        .count() as u32).unwrap())
+        .count() as u32)
 }
 
 #[cfg(test)]
